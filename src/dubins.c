@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include "dubins.h"
+#include "stdlib.h"
 #include <math.h>
 #include <assert.h>
 
@@ -82,7 +83,7 @@ double mod2pi( double theta )
     return fmodr( theta, 2 * M_PI );
 }
 
-int dubins_init_normalised( double alpha, double beta, double d, DubinsPath* path)
+int dubins_init_normalised(double validword[6], double alpha, double beta, double d, DubinsPath* path)
 {
     double best_cost = INFINITY;
     int    best_word;
@@ -90,19 +91,22 @@ int dubins_init_normalised( double alpha, double beta, double d, DubinsPath* pat
 
     best_word = -1;
     for( i = 0; i < 6; i++ ) {
-        double params[3];
-        int err = dubins_words[i](alpha, beta, d, params);
-        if(err == EDUBOK) {
-            double cost = params[0] + params[1] + params[2];
-            if(cost < best_cost) {
-                best_word = i;
-                best_cost = cost;
-                path->param[0] = params[0];
-                path->param[1] = params[1];
-                path->param[2] = params[2];
-                path->type = i;
+    	if(validword[i]){
+            double params[3];
+            int err = dubins_words[i](alpha, beta, d, params);
+            if(err == EDUBOK) {
+                double cost = params[0] + params[1] + params[2];
+                if(cost < best_cost) {
+                    best_word = i;
+                    best_cost = cost;
+                    path->param[0] = params[0];
+                    path->param[1] = params[1];
+                    path->param[2] = params[2];
+                    path->type = i;
+                }
             }
-        }
+    	}
+
     }
 
     if(best_word == -1) {
@@ -112,7 +116,7 @@ int dubins_init_normalised( double alpha, double beta, double d, DubinsPath* pat
     return EDUBOK;
 }
 
-int dubins_init( double q0[3], double q1[3], double rho, DubinsPath* path )
+int dubins_init(double validword[6], double q0[3], double q1[3], double rho, DubinsPath* path )
 {
     int i;
     double dx = q1[0] - q0[0];
@@ -130,7 +134,7 @@ int dubins_init( double q0[3], double q1[3], double rho, DubinsPath* path )
     }
     path->rho = rho;
 
-    return dubins_init_normalised( alpha, beta, d, path );
+    return dubins_init_normalised(validword[6], alpha, beta, d, path );
 }
 
 int dubins_LSL( double alpha, double beta, double d, double* outputs )
@@ -346,6 +350,48 @@ int dubins_extract_subpath( DubinsPath* path, double t, DubinsPath* newpath )
     newpath->param[1] = fmin( path->param[1], tprime - newpath->param[0]);
     newpath->param[2] = fmin( path->param[2], tprime - newpath->param[0] - newpath->param[1]);
     return 0;
+}
+int word_test(double q0[3], double q1[3], double turning_radius, double dimensions[2], int validword[6]){
+	//right is valid?
+	double x = q0[0];
+	double y = q0[1];
+	double tempx = x+cos(q0[2]-3.142/2)*turning_radius;
+	double tempy = y+sin(q0[2]-3.142/2)*turning_radius;
+    //dubins_LSL,
+    //dubins_LSR,
+    //dubins_RSL,
+    //dubins_RSR,
+    //dubins_RLR,
+    //dubins_LRL,
+	if (tempx+turning_radius>dimensions[0] || tempx-turning_radius<0 || tempy+turning_radius>dimensions[1] || tempy-turning_radius<0){
+		validword[2]=0;
+		validword[3]=0;
+		validword[4]=0;
+	}
+	tempx = x-cos(q0[2]-3.142/2)*turning_radius;
+	tempy = y-sin(q0[2]-3.142/2)*turning_radius;
+	if (tempx+turning_radius>dimensions[0] || tempx-turning_radius<0 || tempy+turning_radius>dimensions[1] || tempy-turning_radius<0){
+			validword[0]=0;
+			validword[1]=0;
+			validword[5]=0;
+	}
+	x = q1[0];
+	y = q1[1];
+	double tempx = x+cos(q1[2]-3.142/2)*turning_radius;
+	double tempy = y+sin(q1[2]-3.142/2)*turning_radius;
+	if (tempx+turning_radius>dimensions[0] || tempx-turning_radius<0 || tempy+turning_radius>dimensions[1] || tempy-turning_radius<0){
+			validword[1]=0;
+			validword[3]=0;
+			validword[4]=0;
+	}
+	tempx = x-cos(q1[2]-3.142/2)*turning_radius;
+	tempy = y-sin(q1[2]-3.142/2)*turning_radius;
+	if (tempx+turning_radius>dimensions[0] || tempx-turning_radius<0 || tempy+turning_radius>dimensions[1] || tempy-turning_radius<0){
+			validword[0]=0;
+			validword[2]=0;
+			validword[5]=0;
+	}
+	return 0;
 }
 
 

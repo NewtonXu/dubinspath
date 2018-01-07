@@ -73,7 +73,7 @@ typedef int (*DubinsPathSamplingCallback)(double q[3], double t, void* user_data
  * @param path  - the resultant path
  * @return      - non-zero on error
  */
-int dubins_init( double q0[3], double q1[3], double rho, DubinsPath* path);
+int dubins_init(double validword[6],double q0[3], double q1[3], double rho, DubinsPath* path);
 
 /**
  * Calculate the length of an initialised path
@@ -129,6 +129,9 @@ int dubins_path_endpoint( DubinsPath* path, double q[3] );
 int dubins_extract_subpath( DubinsPath* path, double t, DubinsPath* newpath );
 
 // Only exposed for testing purposes
+
+int word_test(double q0[3], double q1[3], double turning_radius, double dimensions[2], int validword[6])
+//check if any of the paths would cause robot to go out of bounds as given in dimensions
 int dubins_LSL( double alpha, double beta, double d, double* outputs );
 int dubins_RSR( double alpha, double beta, double d, double* outputs );
 int dubins_LSR( double alpha, double beta, double d, double* outputs );
